@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  # This name uniquely identifies the Deployment
+  name: minio-active-recovery-pod
+spec:
+  containers:
+  - name: minio-active-recovery-pod
+    image: containers.cisco.com/grebala/minio-client:v2
+    imagePullPolicy: Always
+    env:
+      - name: minio1Endpoint
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: minio1endpoint
+      - name: minio1Accesskey
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: minio1accesskey
+      - name: minio1Secretaccess
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: minio1secretaccess
+      - name: minio2Endpoint
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: minio2endpoint
+      - name: minio2Accesskey
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: minio2accesskey
+      - name: minio2Secretaccess
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: minio2secretaccess
+      - name: bucket1
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: bucket1
+      - name: bucket2
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: bucket2
+      - name: bucket3
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: bucket3
+      - name: bucket4
+        valueFrom:
+          secretKeyRef:
+            name: mcclient
+            key: bucket4
+    command: [ "/bin/sh", "-c"]
+    args: [ "./mc --insecure --config-folder /root config host add minio1 $minio1Endpoint $minio1Accesskey $minio1Secretaccess;
+   ./mc --insecure --config-folder  /root config host add minio2 $minio2Endpoint $minio2Accesskey $minio2Secretaccess;
+   ./mc --insecure --config-folder /root rm -r --force minio1/$bucket1 &
+   ./mc --insecure --config-folder /root rm -r --force minio1/$bucket3 &
+   sleep 10;
+   ./mc --insecure --config-folder /root mb minio1/$bucket1 &
+   ./mc --insecure --config-folder /root mb minio1/$bucket3 &
+   sleep 10;
+   ./mc --insecure --config-folder /root cp -r minio2/$bucket2/front50 minio1/$bucket1 &
+   ./mc --insecure --config-folder /root cp -r minio2/$bucket4/dump.rdb minio1/$bucket3;" ]
+  restartPolicy: Never
